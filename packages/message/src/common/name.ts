@@ -1,3 +1,5 @@
+import { Serializable } from './serializable';
+
 /**
  * https://datatracker.ietf.org/doc/html/rfc1035#section-3.1
  */
@@ -12,7 +14,7 @@ export class Name {
 }
 
 export namespace Label {
-  export class Standard {
+  export class Standard implements Serializable {
     constructor(private readonly label: string) {}
 
     serialize() {

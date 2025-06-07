@@ -1,27 +1,30 @@
 # @dns-pack/message
 
 ```typescript
-const message = DnsMessage.query(
+const message = DnsMessage.Query(
   1234, // ID
-  {
+  Header.Flags.of({
     QR: 'query',
     Opcode: Header.Flags.Opcode.QUERY,
     AA: false,
     TC: false,
     RD: false,
     RA: false,
+    Z: false,
+    AD: false,
+    CD: false,
     RCODE: 0,
-  },
+  }),
   {
-    questions: [new Question('example.com.', DnsType.A, DnsClass.IN)],
+    questions: [Question.of({ name: 'example.com.', type: DnsType.A, class: DnsClass.IN })],
     additional: [
-      new ResourceRecord.OPT(
-        0, // version
-        [], // options
-        0, // extended rcode
-        { DO: true }, // flags
-        512, // requestor's udp payload size
-      ),
+      ResourceRecord.OPT.of({
+        version: 0,
+        flags: { DO: true },
+        extendedRCode: 0,
+        options: [],
+        udpPayloadSize: 512,
+      }),
     ],
   },
 );

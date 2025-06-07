@@ -6,6 +6,8 @@
   "author": "Kiwi Jang <jh145478@gmail.com>",
   "scripts": {},
   "devDependencies": {
+    "@types/node": "^22.15.30",
+    "elliptic": "^6.6.1",
     "ts-node": "^10.9.2",
     "typescript": "^5.4.5",
     "vitest": "^3.2.2"

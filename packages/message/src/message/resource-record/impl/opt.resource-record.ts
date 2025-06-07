@@ -1,57 +1,80 @@
-import { Byte } from '../../../common/byte';
+import { Serializable } from '../../../common/serializable';
 import { ResourceRecord } from '../resource-record';
 import { ResourceRecordSerializer } from '../resource-record.serializer';
 
-const NAME = Buffer.from([0x00]);
+const rootNameBinary = Buffer.from([0x00]);
 
-export class ResourceRecordOPT {
-  constructor(
+export class ResourceRecordOPT implements ResourceRecord<Options> {
+  public readonly name: string = '';
+  public readonly type: number = ResourceRecord.Type.OPT;
+
+  private constructor(
     private readonly version: number,
-    private readonly options: {
-      code: number;
-      data: Buffer;
-    }[],
-    private readonly extendedRCode: number,
     private readonly flags: { DO: boolean },
-    private readonly requestorUdpPayloadSize: number,
+    private readonly udpPayloadSize: number,
+    private readonly extendedRCode: number,
+    public readonly data: Options,
   ) {}
+
+  static of({
+    version,
+    flags,
+    extendedRCode,
+    options,
+    udpPayloadSize,
+  }: {
+    version: number;
+    flags: { DO: boolean };
+    extendedRCode: number;
+    options: { code: number; data: Buffer }[];
+    udpPayloadSize: number;
+  }) {
+    return new ResourceRecordOPT(
+      version,
+      flags,
+      udpPayloadSize,
+      extendedRCode,
+      new Options(options),
+    );
+  }
+
+  get ttl() {
+    let ttl = 0;
+    // byte 1
+    ttl |= this.extendedRCode;
+    // byte 2
+    ttl <<= 8;
+    ttl |= this.version;
+    // byte 3
+    ttl <<= 8;
+    if (this.flags.DO) {
+      ttl |= 0b1000_0000;
+    }
+    // byte 4
+    ttl <<= 8;
+    return ttl;
+  }
+
+  get class() {
+    return this.udpPayloadSize;
+  }
 
   serialize() {
     return Buffer.concat([
-      NAME,
+      rootNameBinary,
       ResourceRecordSerializer.type(ResourceRecord.Type.OPT),
-      ResourceRecordSerializer.class(this.requestorUdpPayloadSize),
-      this.serializeTtl({
-        version: this.version,
-        extendedRCode: this.extendedRCode,
-        flags: this.flags,
-      }),
-      this.serializeOptions(this.options),
+      ResourceRecordSerializer.class(this.udpPayloadSize),
+      ResourceRecordSerializer.ttl(this.ttl),
+      ResourceRecordSerializer.data(this.data.serialize()),
     ]);
   }
+}
 
-  private serializeTtl({
-    version,
-    extendedRCode,
-    flags,
-  }: {
-    version: number;
-    extendedRCode: number;
-    flags: { DO: boolean };
-  }) {
-    const buffer = Buffer.alloc(4);
-    buffer.writeUInt8(extendedRCode, 0);
-    buffer.writeUInt8(version, 1);
-    const flagByte = new Byte();
-    flagByte.write(flags.DO ? 1 : 0, 0);
-    buffer.writeUInt8(flagByte.read(0, 8), 2);
-    return buffer;
-  }
+class Options implements Serializable {
+  constructor(public readonly options: { code: number; data: Buffer }[]) {}
 
-  private serializeOptions(options: { code: number; data: Buffer }[]) {
-    const length = Buffer.alloc(2);
-    length.writeUInt16BE(options.length, 0);
-    return Buffer.concat([length, ...options.map((option) => this.serializeOption(option))]);
+  serialize() {
+    return Buffer.concat(this.options.map((option) => this.serializeOption(option)));
   }
 
   private serializeOption({ code, data }: { code: number; data: Buffer }) {
