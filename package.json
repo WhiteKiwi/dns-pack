@@ -1,0 +1,17 @@
+{
+  "name": "@dns-pack/root",
+  "version": "1.0.0",
+  "private": true,
+  "repository": "git@github.com:whitekiwi/dns-pack.git",
+  "author": "Kiwi Jang <jh145478@gmail.com>",
+  "scripts": {},
+  "devDependencies": {
+    "ts-node": "^10.9.2",
+    "typescript": "^5.4.5",
+    "vitest": "^3.2.2"
+  },
+  "volta": {
+    "node": "22.15.1",
+    "pnpm": "10.11.0"
+  }
+}

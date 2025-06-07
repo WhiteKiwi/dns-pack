@@ -1,0 +1,26 @@
+{
+  "name": "@dns-pack/message",
+  "version": "0.0.1",
+  "license": "MIT",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "module": "src/index.ts",
+  "files": [
+    "esm",
+    "dist",
+    "src/**/*.ts"
+  ],
+  "scripts": {
+    "build": "rm -rf dist esm && tsc -p tsconfig.build.json && tsc -p tsconfig.esm.json",
+    "test": "vitest --run"
+  },
+  "dependencies": {},
+  "volta": {
+    "extends": "../../package.json"
+  },
+  "publishConfig": {
+    "main": "dist/index.js",
+    "types": "dist/index.d.ts",
+    "module": "esm/index.js"
+  }
+}
