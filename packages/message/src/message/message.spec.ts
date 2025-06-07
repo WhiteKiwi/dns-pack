@@ -8,7 +8,7 @@ import { ResourceRecord } from './resource-record/resource-record';
 
 describe('DnsMessage', () => {
   it('should serialize', () => {
-    const message = DnsMessage.create(
+    const message = DnsMessage.query(
       1234, // ID
       {
         QR: 'query',
@@ -19,22 +19,18 @@ describe('DnsMessage', () => {
         RA: false,
         RCODE: 0,
       },
-      // question
-      [new Question('example.com.', DnsType.A, DnsClass.IN)],
-      // answer
-      [],
-      // authority
-      [],
-      // additional
-      [
-        new ResourceRecord.OPT(
-          0, // version
-          [], // options
-          0, // extended rcode
-          { DO: true }, // flags
-          512, // requestor's udp payload size
-        ),
-      ],
+      {
+        questions: [new Question('example.com.', DnsType.A, DnsClass.IN)],
+        additional: [
+          new ResourceRecord.OPT(
+            0, // version
+            [], // options
+            0, // extended rcode
+            { DO: true }, // flags
+            512, // requestor's udp payload size
+          ),
+        ],
+      },
     );
 
     expect(

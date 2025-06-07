@@ -1,3 +1,4 @@
+import { Name } from '../../common/name';
 import { DnsClass } from '../../common/types/class';
 import { DnsType } from '../../common/types/type';
 import { QuestionSerializer } from './question.serializer';
@@ -11,7 +12,7 @@ export class Question {
 
   serialize() {
     return Buffer.concat([
-      QuestionSerializer.name(this.name),
+      Name.serialize(this.name),
       QuestionSerializer.type(this.type),
       QuestionSerializer.class(this._class),
     ]);

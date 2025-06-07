@@ -11,24 +11,27 @@ export class DnsMessage {
     public readonly additional: ResourceRecord[],
   ) {}
 
-  static create(
+  static query(
     id: number,
     flags: Header.Flags,
-    questions: Question[],
-    answers: ResourceRecord[],
-    authorities: ResourceRecord[],
-    additional: ResourceRecord[],
+    {
+      questions,
+      additional,
+    }: {
+      questions: Question[];
+      additional: ResourceRecord[];
+    },
   ) {
     return new DnsMessage(
       new Header(id, flags, {
         question: questions.length,
-        answer: answers.length,
-        authority: authorities.length,
+        answer: 0,
+        authority: 0,
         additional: additional.length,
       }),
       questions,
-      answers,
-      authorities,
+      [], // answers
+      [], // authorities
       additional,
     );
   }
