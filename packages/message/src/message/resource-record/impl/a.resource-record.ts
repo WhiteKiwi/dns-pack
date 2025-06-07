@@ -1,3 +1,4 @@
+import { Name } from '../../../common/name';
 import { ResourceRecord } from '../resource-record';
 import { ResourceRecordSerializer } from '../resource-record.serializer';
 
@@ -11,7 +12,7 @@ export namespace ResourceRecordA {
 
     serialize() {
       return Buffer.concat([
-        ResourceRecordSerializer.name(this.name),
+        Name.serialize(this.name),
         ResourceRecordSerializer.type(ResourceRecord.Type.A),
         ResourceRecordSerializer.class(ResourceRecord.Class.IN),
         ResourceRecordSerializer.ttl(this.ttl),

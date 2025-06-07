@@ -12,7 +12,6 @@ describe('Header', () => {
         TC: false,
         RD: false,
         RA: false,
-        Z: 0,
         RCODE: 0,
       },
       {

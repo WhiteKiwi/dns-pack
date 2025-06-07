@@ -1,12 +1,7 @@
-import { Name } from '../../common/name';
 import { DnsClass } from '../../common/types/class';
 import { DnsType } from '../../common/types/type';
 
 export class QuestionSerializer {
-  static name(name: string) {
-    return Name.serialize(name);
-  }
-
   static type(type: DnsType) {
     const buffer = Buffer.alloc(2);
     buffer.writeUInt16BE(type, 0);

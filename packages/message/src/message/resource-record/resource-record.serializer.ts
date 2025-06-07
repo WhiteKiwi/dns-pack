@@ -1,10 +1,4 @@
-import { Name } from '../../common/name';
-
 export class ResourceRecordSerializer {
-  static name(name: string) {
-    return Name.serialize(name);
-  }
-
   static type(type: number) {
     const buffer = Buffer.alloc(2);
     buffer.writeUInt16BE(type, 0);
