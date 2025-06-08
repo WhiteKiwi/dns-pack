@@ -8,7 +8,7 @@ describe('Header', () => {
       1234,
       Header.Flags.of({
         QR: 'query',
-        Opcode: Header.Flags.Opcode.QUERY,
+        OPCODE: Header.Flags.Opcode.QUERY,
         AA: false,
         TC: false,
         RD: false,
@@ -26,7 +26,7 @@ describe('Header', () => {
       },
     );
     expect(HexReadable.fromBuffer(header.serialize())).toMatchInlineSnapshot(
-      `"04 d2 00 00  00 01 00 00  00 00 00 00"`,
+      `"04 d2 00 00  00 01 00 00    00 00 00 00"`,
     );
   });
 
@@ -38,7 +38,7 @@ describe('Header', () => {
     const header = Header.deserialize(serialized);
     expect(header.id).toBe(1234);
     expect(header.flags.QR).toBe('query');
-    expect(header.flags.Opcode).toBe(Header.Flags.Opcode.QUERY);
+    expect(header.flags.OPCODE).toBe(Header.Flags.Opcode.QUERY);
     expect(header.count.question).toBe(1);
   });
 });

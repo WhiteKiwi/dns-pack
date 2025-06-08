@@ -47,7 +47,7 @@ export class DnsMessage implements Serializable {
     ]);
   }
 
-  static parse(buffer: Buffer) {
+  static parse(buffer: Buffer): DnsMessage {
     const header = Header.deserialize(buffer);
     let offset = 12;
     const questions: Question[] = [];

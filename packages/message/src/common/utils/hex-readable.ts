@@ -27,7 +27,7 @@ export class HexReadable {
         .map((byte) => byte.toString(16).padStart(2, '0'))
         .join(' ');
 
-      lines.push(`${hex}  ${hex2}  ${hex3}  ${hex4}`.trim());
+      lines.push(`${hex}  ${hex2}    ${hex3}  ${hex4}`.trim());
     }
 
     return lines.join('\n');

@@ -1,17 +1,22 @@
 import { Byte } from '../../common/byte';
+import { Enum } from '../../common/enum';
 
-enum Opcode {
-  QUERY = 0,
+const Opcode = Enum('Opcode', { QUERY: 0 });
+
+export namespace HeaderFlags {
+  export namespace Opcode {
+    export type Readable = Enum.KeyOf<typeof Opcode>;
+  }
 }
 
 export class HeaderFlags {
-  private constructor(private readonly bytes: [Byte, Byte]) {}
-
   static Opcode = Opcode;
+
+  private constructor(private readonly bytes: [Byte, Byte]) {}
 
   static of(flags: {
     QR: 'query' | 'response';
-    Opcode: number;
+    OPCODE: number;
     AA: boolean;
     TC: boolean;
     RD: boolean;
@@ -24,7 +29,7 @@ export class HeaderFlags {
     const bytes: [Byte, Byte] = [new Byte(0), new Byte(0)];
     bytes[0]
       .write(0, 1, flags.QR === 'query' ? 0 : 1)
-      .write(1, 4, flags.Opcode)
+      .write(1, 4, flags.OPCODE)
       .write(5, 1, flags.AA ? 1 : 0)
       .write(6, 1, flags.TC ? 1 : 0)
       .write(7, 1, flags.RD ? 1 : 0);
@@ -49,7 +54,7 @@ export class HeaderFlags {
     return this.bytes[0].read(0, 1) === 1 ? 'response' : 'query';
   }
 
-  get Opcode(): number {
+  get OPCODE(): number {
     return this.bytes[0].read(1, 4);
   }
 

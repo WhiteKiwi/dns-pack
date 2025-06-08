@@ -1,15 +1,28 @@
 import { Name } from '../../common/name';
 import { Serializable } from '../../common/serializable';
+import { ResourceRecord } from '../resource-record/resource-record';
 import { QuestionParser } from './question.parser';
 
 export class Question implements Serializable {
-  public readonly class: number;
-  private constructor(public readonly name: string, public readonly type: number, _class: number) {
+  public readonly class: ResourceRecord.Class;
+  private constructor(
+    public readonly name: Name,
+    public readonly type: ResourceRecord.Type,
+    _class: ResourceRecord.Class,
+  ) {
     this.class = _class;
   }
 
-  static of(question: { name: string; type: number; class: number }) {
-    return new Question(question.name, question.type, question.class);
+  static of(question: {
+    name: string;
+    type: ResourceRecord.Type.Readable;
+    class: ResourceRecord.Class.Readable;
+  }) {
+    return new Question(
+      Name.of(question.name),
+      ResourceRecord.Type[question.type],
+      ResourceRecord.Class[question.class],
+    );
   }
 
   static parse(
@@ -28,24 +41,6 @@ export class Question implements Serializable {
   }
 
   serialize() {
-    return Buffer.concat([
-      Name.serialize(this.name),
-      QuestionSerializer.type(this.type),
-      QuestionSerializer.class(this.class),
-    ]);
-  }
-}
-
-class QuestionSerializer {
-  static type(type: number) {
-    const buffer = Buffer.alloc(2);
-    buffer.writeUInt16BE(type, 0);
-    return buffer;
-  }
-
-  static class(_class: number) {
-    const buffer = Buffer.alloc(2);
-    buffer.writeUInt16BE(_class, 0);
-    return buffer;
+    return Buffer.concat([this.name.serialize(), this.type.serialize(), this.class.serialize()]);
   }
 }

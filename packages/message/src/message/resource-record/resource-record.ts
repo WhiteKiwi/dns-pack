@@ -1,14 +1,16 @@
+import { Enum } from '../../common/enum';
+import { Name } from '../../common/name';
 import { Serializable } from '../../common/serializable';
-import { DnsClass } from '../../common/types/class';
-import { DnsType } from '../../common/types/type';
+import { ResourceRecordClass, ResourceRecordClassEnum } from './common/resource-record.class';
+import { ResourceRecordType, ResourceRecordTypeEnum } from './common/resource-record.type';
 import { ResourceRecordA } from './impl/a.resource-record';
 import { ResourceRecordOPT } from './impl/opt.resource-record';
 import { ResourceRecordParser } from './resource-record.parser';
 
 export interface ResourceRecord<T extends Serializable = Serializable> {
-  name: string;
-  type: number;
-  class: number;
+  name: Name;
+  type: ResourceRecord.Type.Like;
+  class: ResourceRecord.Class.Like;
   ttl: number;
   data: T;
 
@@ -16,9 +18,43 @@ export interface ResourceRecord<T extends Serializable = Serializable> {
 }
 
 export namespace ResourceRecord {
-  export const Type = DnsType;
-  export const Class = DnsClass;
+  // type
+  type TypeOfType = typeof ResourceRecordType &
+    Record<Type.Readable, ResourceRecordType> & {
+      Readable: typeof ResourceRecordTypeEnum.Readable;
+    };
+  export type Type = ResourceRecordType;
+  export namespace Type {
+    export type Readable = Enum.KeyOf<typeof ResourceRecordTypeEnum>;
+    export type Like = ResourceRecordType.Like;
+  }
+  export const Type: TypeOfType = ResourceRecordType as TypeOfType;
+  Type.Readable = ResourceRecordTypeEnum.Readable;
+  for (const key of Object.keys(ResourceRecordTypeEnum)) {
+    (ResourceRecordType as TypeOfType)[key as Type.Readable] = ResourceRecordType.of(
+      ResourceRecordTypeEnum[key as Type.Readable],
+    );
+  }
 
+  // class
+  type TypeOfClass = typeof ResourceRecordClass &
+    Record<Class.Readable, ResourceRecordClass> & {
+      Readable: typeof ResourceRecordClassEnum.Readable;
+    };
+  export type Class = ResourceRecordClass;
+  export namespace Class {
+    export type Readable = Enum.KeyOf<typeof ResourceRecordClassEnum>;
+    export type Like = ResourceRecordClass.Like;
+  }
+  export const Class: TypeOfClass = ResourceRecordClass as TypeOfClass;
+  Class.Readable = ResourceRecordClassEnum.Readable;
+  for (const key of Object.keys(ResourceRecordClassEnum)) {
+    (ResourceRecordClass as TypeOfClass)[key as Class.Readable] = ResourceRecordClass.of(
+      ResourceRecordClassEnum[key as Class.Readable],
+    );
+  }
+
+  // parser
   export const Parser = ResourceRecordParser;
 
   // records

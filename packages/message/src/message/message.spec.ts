@@ -1,6 +1,4 @@
 import { describe, expect, it } from 'vitest';
-import { DnsClass } from '../common/types/class';
-import { DnsType } from '../common/types/type';
 import { dnsMessageToReadable } from '../common/utils/dns-message-to-readable';
 import { HexReadable } from '../common/utils/hex-readable';
 import { Header } from './header/header';
@@ -14,7 +12,7 @@ describe('DnsMessage', () => {
       1234, // ID
       Header.Flags.of({
         QR: 'query',
-        Opcode: Header.Flags.Opcode.QUERY,
+        OPCODE: Header.Flags.Opcode.QUERY,
         AA: false,
         TC: false,
         RD: false,
@@ -25,7 +23,7 @@ describe('DnsMessage', () => {
         RCODE: 0,
       }),
       {
-        questions: [Question.of({ name: 'example.com.', type: DnsType.A, class: DnsClass.IN })],
+        questions: [Question.of({ name: 'example.com.', type: 'A', class: 'IN' })],
         additional: [
           ResourceRecord.OPT.of({
             version: 0,
@@ -77,7 +75,7 @@ describe('DnsMessage', () => {
         - ID: 1234
         - FLAGS:
           - QR: response
-          - Opcode: 0
+          - Opcode: QUERY
           - AA: false
           - TC: false
           - RD: false
@@ -92,57 +90,57 @@ describe('DnsMessage', () => {
         - ARCOUNT: 1
 
       >> Questions
-        - 1. Name: example.com., Type: 1, Class: 1
+        - 1. Name: example.com., Type: A, Class: IN
 
       >> Answers
         > 1. Name: example.com.
-          - Type: 1
-          - Class: 1
+          - Type: A
+          - Class: IN
           - Ttl: 214
           - Data: 60 07 80 c6
         > 2. Name: example.com.
-          - Type: 1
-          - Class: 1
+          - Type: A
+          - Class: IN
           - Ttl: 214
           - Data: 17 d7 00 88
         > 3. Name: example.com.
-          - Type: 1
-          - Class: 1
+          - Type: A
+          - Class: IN
           - Ttl: 214
           - Data: 17 d7 00 8a
         > 4. Name: example.com.
-          - Type: 1
-          - Class: 1
+          - Type: A
+          - Class: IN
           - Ttl: 214
           - Data: 60 07 80 af
         > 5. Name: example.com.
-          - Type: 1
-          - Class: 1
+          - Type: A
+          - Class: IN
           - Ttl: 214
           - Data: 17 c0 e4 54
         > 6. Name: example.com.
-          - Type: 1
-          - Class: 1
+          - Type: A
+          - Class: IN
           - Ttl: 214
           - Data: 17 c0 e4 50
         > 7. Name: example.com.
-          - Type: 46
-          - Class: 1
+          - Type: RRSIG
+          - Class: IN
           - Ttl: 214
           - Data: 
-            00 01 0d 02  00 00 01 2c  68 55 34 a8  68 38 f9 d7
-            c9 c3 07 65  78 61 6d 70  6c 65 03 63  6f 6d 00 8f
-            c4 0d c0 91  7b 36 ec 2e  bf eb ad 51  38 46 43 39
-            06 5c cc f8  1b a4 32 c3  ba 27 df f0  b8 47 6c fa
-            1e 9f b5 ad  8d 29 5d 44  bd 30 4b 50  0e 15 4f f0
-            b8 44 7c 04  e4 60 81 20  df 5c 2c 19  47 fa 8d
+            00 01 0d 02  00 00 01 2c    68 55 34 a8  68 38 f9 d7
+            c9 c3 07 65  78 61 6d 70    6c 65 03 63  6f 6d 00 8f
+            c4 0d c0 91  7b 36 ec 2e    bf eb ad 51  38 46 43 39
+            06 5c cc f8  1b a4 32 c3    ba 27 df f0  b8 47 6c fa
+            1e 9f b5 ad  8d 29 5d 44    bd 30 4b 50  0e 15 4f f0
+            b8 44 7c 04  e4 60 81 20    df 5c 2c 19  47 fa 8d
 
       >> Authorities
 
       >> Additional
         > 1. Name: 
-          - Type: 41
-          - Class: 512
+          - Type: OPT
+          - Class: Class(512)
           - Ttl: 32768
           - Data: (no data)"
     `);

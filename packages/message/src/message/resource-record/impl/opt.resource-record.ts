@@ -1,3 +1,4 @@
+import { Name } from '../../../common/name';
 import { Serializable } from '../../../common/serializable';
 import { ResourceRecord } from '../resource-record';
 import { ResourceRecordSerializer } from '../resource-record.serializer';
@@ -5,16 +6,19 @@ import { ResourceRecordSerializer } from '../resource-record.serializer';
 const rootNameBinary = Buffer.from([0x00]);
 
 export class ResourceRecordOPT implements ResourceRecord<Options> {
-  public readonly name: string = '';
-  public readonly type: number = ResourceRecord.Type.OPT;
+  public readonly name: Name = Name.of('');
+  public readonly type = ResourceRecord.Type.OPT;
+  public readonly class: ResourceRecord.Class.Like;
 
   private constructor(
     private readonly version: number,
     private readonly flags: { DO: boolean },
-    private readonly udpPayloadSize: number,
+    udpPayloadSize: number,
     private readonly extendedRCode: number,
     public readonly data: Options,
-  ) {}
+  ) {
+    this.class = new OptClass(udpPayloadSize);
+  }
 
   static of({
     version,
@@ -55,15 +59,11 @@ export class ResourceRecordOPT implements ResourceRecord<Options> {
     return ttl;
   }
 
-  get class() {
-    return this.udpPayloadSize;
-  }
-
   serialize() {
     return Buffer.concat([
       rootNameBinary,
-      ResourceRecordSerializer.type(ResourceRecord.Type.OPT),
-      ResourceRecordSerializer.class(this.udpPayloadSize),
+      this.type.serialize(),
+      this.class.serialize(),
       ResourceRecordSerializer.ttl(this.ttl),
       ResourceRecordSerializer.data(this.data.serialize()),
     ]);
@@ -86,5 +86,23 @@ class Options implements Serializable {
 
     const buffers: Buffer[] = [optionCodeBuffer, optionLengthBuffer, data];
     return Buffer.concat(buffers);
+  }
+}
+
+class OptClass implements ResourceRecord.Class.Like {
+  constructor(public readonly udpPayloadSize: number) {}
+
+  serialize() {
+    const buffer = Buffer.alloc(2);
+    buffer.writeUInt16BE(this.udpPayloadSize, 0);
+    return buffer;
+  }
+
+  valueOf(): number {
+    return this.udpPayloadSize;
+  }
+
+  toJSON(): string {
+    return `UdpPayloadSize(${this.udpPayloadSize})`;
   }
 }

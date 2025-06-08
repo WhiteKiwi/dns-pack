@@ -1,16 +1,4 @@
 export class ResourceRecordSerializer {
-  static type(type: number) {
-    const buffer = Buffer.alloc(2);
-    buffer.writeUInt16BE(type, 0);
-    return buffer;
-  }
-
-  static class(_class: number) {
-    const buffer = Buffer.alloc(2);
-    buffer.writeUInt16BE(_class, 0);
-    return buffer;
-  }
-
   static ttl(ttl: number) {
     const buffer = Buffer.alloc(4);
     buffer.writeUInt32BE(ttl, 0);

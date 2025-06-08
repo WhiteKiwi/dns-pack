@@ -1,36 +1,19 @@
 import { describe, expect, it } from 'vitest';
 import { Name } from './name';
+import { HexReadable } from './utils/hex-readable';
 
 describe('Name', () => {
   it('should serialize a name', () => {
-    const name = 'example.com.';
-    const serialized = Name.serialize(name);
-    expect(Array.from(serialized)).toMatchInlineSnapshot(`
-      [
-        7,
-        101,
-        120,
-        97,
-        109,
-        112,
-        108,
-        101,
-        3,
-        99,
-        111,
-        109,
-        0,
-      ]
-    `);
+    const name = Name.of('example.com.');
+    const serialized = name.serialize();
+    expect(HexReadable.fromBuffer(serialized)).toMatchInlineSnapshot(
+      `"07 65 78 61  6d 70 6c 65    03 63 6f 6d  00"`,
+    );
   });
 
   it('should serialize empty name', () => {
-    const name = '';
-    const serialized = Name.serialize(name);
-    expect(Array.from(serialized)).toMatchInlineSnapshot(`
-      [
-        0,
-      ]
-    `);
+    const name = Name.of('');
+    const serialized = name.serialize();
+    expect(HexReadable.fromBuffer(serialized)).toMatchInlineSnapshot(`"00"`);
   });
 });
