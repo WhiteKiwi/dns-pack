@@ -1,7 +1,18 @@
 import { Serializable } from './serializable';
 
 export class IPv4 implements Serializable {
-  constructor(private readonly address: string) {}
+  private constructor(private readonly address: string) {}
+
+  static of(address: string) {
+    return new IPv4(address);
+  }
+
+  static deserialize(serialized: Buffer) {
+    const address = Array.from(serialized)
+      .map((byte) => byte.toString(10))
+      .join('.');
+    return new IPv4(address);
+  }
 
   serialize() {
     const buffer = Buffer.alloc(4);
@@ -14,5 +25,9 @@ export class IPv4 implements Serializable {
     buffer.writeUInt8(Number(d), 3);
 
     return buffer;
+  }
+
+  valueOf() {
+    return this.address;
   }
 }

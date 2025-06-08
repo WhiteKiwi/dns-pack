@@ -34,25 +34,18 @@ describe.skipIf(process.env.CI)('e2e', () => {
 
     const aRRSet = aResponse.answers
       .filter((answer) => answer.type.valueOf() === ResourceRecord.Type.A.valueOf())
-      .map((answer) => {
-        return ResourceRecord.A.of({
-          name: answer.name.valueOf(),
-          class: 'IN',
-          ttl: rrsigData.originalTTL,
-          ipv4: Array.from(answer.data.serialize())
-            .map((byte) => byte.toString(10))
-            .join('.'),
-        });
-      });
-    const canonicalizedRRSet = aRRSet.sort((a, b) => a.ipv4.localeCompare(b.ipv4));
+      .map((answer) => ResourceRecord.A.from(answer));
+    const canonicalizedRRSet = aRRSet.sort((a, b) =>
+      a.data.valueOf().localeCompare(b.data.valueOf()),
+    );
     console.log(
       'canonicalizedRRSet: \n',
       canonicalizedRRSet
         .map(
           (rr) =>
-            `  ${rr.name.valueOf()}\t${rr.ttl}\t${rr.class.toJSON()}\t${rr.type.toJSON()}\t${
-              rr.ipv4
-            }`,
+            `  ${rr.name.valueOf()}\t${
+              rr.ttl
+            }\t${rr.class.toJSON()}\t${rr.type.toJSON()}\t${rr.data.valueOf()}`,
         )
         .join('\n'),
       '\n',

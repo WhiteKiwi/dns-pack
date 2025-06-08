@@ -5,16 +5,14 @@ import { ResourceRecordSerializer } from '../resource-record.serializer';
 
 export class ResourceRecordA implements ResourceRecord<IPv4> {
   public readonly type: ResourceRecord.Type = ResourceRecord.Type.A;
-  public readonly class: ResourceRecord.Class;
-  public readonly data: IPv4;
+  public readonly class: ResourceRecord.Class.Like;
 
   private constructor(
     public readonly name: Name,
-    _class: ResourceRecord.Class,
+    _class: ResourceRecord.Class.Like,
     public readonly ttl: number,
-    public readonly ipv4: string,
+    public readonly data: IPv4,
   ) {
-    this.data = new IPv4(ipv4);
     this.class = _class;
   }
 
@@ -29,7 +27,16 @@ export class ResourceRecordA implements ResourceRecord<IPv4> {
     ttl: number;
     ipv4: string;
   }) {
-    return new ResourceRecordA(Name.of(name), ResourceRecord.Class[_class], ttl, ipv4);
+    return new ResourceRecordA(Name.of(name), ResourceRecord.Class[_class], ttl, IPv4.of(ipv4));
+  }
+
+  static from(parsed: ResourceRecord) {
+    return new ResourceRecordA(
+      parsed.name,
+      parsed.class,
+      parsed.ttl,
+      IPv4.deserialize(parsed.data.serialize()),
+    );
   }
 
   serialize() {
