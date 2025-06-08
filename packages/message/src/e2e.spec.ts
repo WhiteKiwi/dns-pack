@@ -1,6 +1,7 @@
 import * as crypto from 'crypto';
 import { describe, it } from 'vitest';
 import { Name } from './common/name';
+import { UrlSafeBase64 } from './common/url-safe-base64';
 import { dnsMessageToReadable } from './common/utils/dns-message-to-readable';
 import { Header } from './message/header/header';
 import { DnsMessage } from './message/message';
@@ -69,7 +70,7 @@ const queryA = DnsMessage.Query(
     OPCODE: 'QUERY',
     AA: false,
     TC: false,
-    RD: false,
+    RD: true,
     RA: false,
     Z: false,
     AD: false,
@@ -97,7 +98,7 @@ const queryDNSKEY = DnsMessage.Query(
     OPCODE: 'QUERY',
     AA: false,
     TC: false,
-    RD: false,
+    RD: true,
     RA: false,
     Z: false,
     AD: false,
@@ -119,10 +120,12 @@ const queryDNSKEY = DnsMessage.Query(
 );
 
 async function queryDnsOverHttps(host: string, query: DnsMessage): Promise<DnsMessage> {
-  const queryBase64 = query.serialize().toString('base64').replace(/=*$/, '');
-  const response = await fetch(`https://${host}/dns-query?dns=${queryBase64}`, {
-    headers: { accept: 'application/dns-message' },
-  });
+  const response = await fetch(
+    `https://${host}/dns-query?dns=${UrlSafeBase64.encode(query.serialize())}`,
+    {
+      headers: { accept: 'application/dns-message' },
+    },
+  );
   const data = await response.arrayBuffer();
   return DnsMessage.parse(Buffer.from(data));
 }
