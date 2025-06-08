@@ -16,7 +16,7 @@ export class HeaderFlags {
 
   static of(flags: {
     QR: 'query' | 'response';
-    OPCODE: number;
+    OPCODE: HeaderFlags.Opcode.Readable;
     AA: boolean;
     TC: boolean;
     RD: boolean;
@@ -29,7 +29,7 @@ export class HeaderFlags {
     const bytes: [Byte, Byte] = [new Byte(0), new Byte(0)];
     bytes[0]
       .write(0, 1, flags.QR === 'query' ? 0 : 1)
-      .write(1, 4, flags.OPCODE)
+      .write(1, 4, Opcode[flags.OPCODE])
       .write(5, 1, flags.AA ? 1 : 0)
       .write(6, 1, flags.TC ? 1 : 0)
       .write(7, 1, flags.RD ? 1 : 0);

@@ -1,6 +1,5 @@
 import { Header } from '../../message/header/header';
 import { DnsMessage } from '../../message/message';
-import { ResourceRecord } from '../../message/resource-record/resource-record';
 import { HexReadable } from './hex-readable';
 
 export function dnsMessageToReadable({
@@ -34,9 +33,9 @@ export function dnsMessageToReadable({
     `>> Questions`,
     ...questions.map(
       (question, i) =>
-        `  - ${i + 1}. Name: ${question.name.valueOf()}, Type: ${ResourceRecord.Type.Readable(
-          question.type.valueOf(),
-        )}, Class: ${ResourceRecord.Class.Readable(question.class.valueOf())}`,
+        `  - ${
+          i + 1
+        }. Name: ${question.name.valueOf()}, Type: ${question.type.toJSON()}, Class: ${question.class.toJSON()}`,
     ),
   ].join('\n');
 
@@ -50,8 +49,8 @@ export function dnsMessageToReadable({
 
       const arr = [
         `  > ${i + 1}. Name: ${rr.name.valueOf()}`,
-        `    - Type: ${ResourceRecord.Type.Readable(rr.type.valueOf())}`,
-        `    - Class: ${ResourceRecord.Class.Readable(rr.class.valueOf())}`,
+        `    - Type: ${rr.type.toJSON()}`,
+        `    - Class: ${rr.class.toJSON()}`,
         `    - Ttl: ${rr.ttl}`,
       ];
       if (lines.length === 1) {
@@ -75,8 +74,8 @@ export function dnsMessageToReadable({
 
       const arr = [
         `  > ${i + 1}. Name: ${rr.name.valueOf()}`,
-        `    - Type: ${ResourceRecord.Type.Readable(rr.type.valueOf())}`,
-        `    - Class: ${ResourceRecord.Class.Readable(rr.class.valueOf())}`,
+        `    - Type: ${rr.type.toJSON()}`,
+        `    - Class: ${rr.class.toJSON()}`,
         `    - Ttl: ${rr.ttl}`,
       ];
       if (lines.length === 1) {
@@ -100,8 +99,8 @@ export function dnsMessageToReadable({
 
       const arr = [
         `  > ${i + 1}. Name: ${rr.name.valueOf()}`,
-        `    - Type: ${ResourceRecord.Type.Readable(rr.type.valueOf())}`,
-        `    - Class: ${ResourceRecord.Class.Readable(rr.class.valueOf())}`,
+        `    - Type: ${rr.type.toJSON()}`,
+        `    - Class: ${rr.class.toJSON()}`,
         `    - Ttl: ${rr.ttl}`,
       ];
       if (lines.length === 1) {

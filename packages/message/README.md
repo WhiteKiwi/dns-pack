@@ -5,7 +5,7 @@ const message = DnsMessage.Query(
   1234, // ID
   Header.Flags.of({
     QR: 'query',
-    Opcode: Header.Flags.Opcode.QUERY,
+    OPCODE: 'QUERY',
     AA: false,
     TC: false,
     RD: false,
@@ -16,7 +16,7 @@ const message = DnsMessage.Query(
     RCODE: 0,
   }),
   {
-    questions: [Question.of({ name: 'example.com.', type: DnsType.A, class: DnsClass.IN })],
+    questions: [Question.of({ name: 'example.com.', type: 'A', class: 'IN' })],
     additional: [
       ResourceRecord.OPT.of({
         version: 0,

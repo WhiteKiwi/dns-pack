@@ -5,7 +5,7 @@ export const ResourceRecordClassEnum = Enum('Class', {
 });
 
 export namespace ResourceRecordClass {
-  export type Like = Pick<ResourceRecordClass, 'serialize' | 'valueOf'>;
+  export type Like = Pick<ResourceRecordClass, 'serialize' | 'valueOf' | 'toJSON'>;
 }
 
 export class ResourceRecordClass {
@@ -27,5 +27,9 @@ export class ResourceRecordClass {
 
   valueOf(): number {
     return this._class;
+  }
+
+  toJSON(): string {
+    return ResourceRecordClassEnum.Readable(this.valueOf());
   }
 }

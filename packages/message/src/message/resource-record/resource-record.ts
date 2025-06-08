@@ -19,17 +19,13 @@ export interface ResourceRecord<T extends Serializable = Serializable> {
 
 export namespace ResourceRecord {
   // type
-  type TypeOfType = typeof ResourceRecordType &
-    Record<Type.Readable, ResourceRecordType> & {
-      Readable: typeof ResourceRecordTypeEnum.Readable;
-    };
+  type TypeOfType = typeof ResourceRecordType & Record<Type.Readable, ResourceRecordType>;
   export type Type = ResourceRecordType;
   export namespace Type {
     export type Readable = Enum.KeyOf<typeof ResourceRecordTypeEnum>;
     export type Like = ResourceRecordType.Like;
   }
   export const Type: TypeOfType = ResourceRecordType as TypeOfType;
-  Type.Readable = ResourceRecordTypeEnum.Readable;
   for (const key of Object.keys(ResourceRecordTypeEnum)) {
     (ResourceRecordType as TypeOfType)[key as Type.Readable] = ResourceRecordType.of(
       ResourceRecordTypeEnum[key as Type.Readable],
@@ -37,17 +33,13 @@ export namespace ResourceRecord {
   }
 
   // class
-  type TypeOfClass = typeof ResourceRecordClass &
-    Record<Class.Readable, ResourceRecordClass> & {
-      Readable: typeof ResourceRecordClassEnum.Readable;
-    };
+  type TypeOfClass = typeof ResourceRecordClass & Record<Class.Readable, ResourceRecordClass>;
   export type Class = ResourceRecordClass;
   export namespace Class {
     export type Readable = Enum.KeyOf<typeof ResourceRecordClassEnum>;
     export type Like = ResourceRecordClass.Like;
   }
   export const Class: TypeOfClass = ResourceRecordClass as TypeOfClass;
-  Class.Readable = ResourceRecordClassEnum.Readable;
   for (const key of Object.keys(ResourceRecordClassEnum)) {
     (ResourceRecordClass as TypeOfClass)[key as Class.Readable] = ResourceRecordClass.of(
       ResourceRecordClassEnum[key as Class.Readable],

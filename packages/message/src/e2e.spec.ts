@@ -37,7 +37,7 @@ describe.skipIf(process.env.CI)('e2e', () => {
       .map((answer) => {
         return ResourceRecord.A.of({
           name: answer.name.valueOf(),
-          class: ResourceRecord.Class.Readable(answer.class.valueOf()),
+          class: 'IN',
           ttl: rrsigData.originalTTL,
           ipv4: Array.from(answer.data.serialize())
             .map((byte) => byte.toString(10))
@@ -50,9 +50,9 @@ describe.skipIf(process.env.CI)('e2e', () => {
       canonicalizedRRSet
         .map(
           (rr) =>
-            `  ${rr.name.valueOf()}\t${rr.ttl}\t${ResourceRecord.Class.Readable(
-              rr.class.valueOf(),
-            )}\t${ResourceRecord.Type.Readable(rr.type.valueOf())}\t${rr.ipv4}`,
+            `  ${rr.name.valueOf()}\t${rr.ttl}\t${rr.class.toJSON()}\t${rr.type.toJSON()}\t${
+              rr.ipv4
+            }`,
         )
         .join('\n'),
       '\n',
@@ -73,7 +73,7 @@ const queryA = DnsMessage.Query(
   Math.floor(Math.random() * 65535), // ID
   Header.Flags.of({
     QR: 'query',
-    OPCODE: Header.Flags.Opcode.QUERY,
+    OPCODE: 'QUERY',
     AA: false,
     TC: false,
     RD: false,
@@ -101,7 +101,7 @@ const queryDNSKEY = DnsMessage.Query(
   Math.floor(Math.random() * 65535), // ID
   Header.Flags.of({
     QR: 'query',
-    OPCODE: Header.Flags.Opcode.QUERY,
+    OPCODE: 'QUERY',
     AA: false,
     TC: false,
     RD: false,

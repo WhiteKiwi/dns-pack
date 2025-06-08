@@ -3,5 +3,6 @@
   "compilerOptions": {
     "outDir": "esm",
     "module": "esnext"
-  }
+  },
+  "exclude": ["**/*.spec.ts"]
 }

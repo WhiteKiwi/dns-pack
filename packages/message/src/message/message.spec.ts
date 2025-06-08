@@ -12,7 +12,7 @@ describe('DnsMessage', () => {
       1234, // ID
       Header.Flags.of({
         QR: 'query',
-        OPCODE: Header.Flags.Opcode.QUERY,
+        OPCODE: 'QUERY',
         AA: false,
         TC: false,
         RD: false,

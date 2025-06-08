@@ -8,7 +8,7 @@ describe('Header', () => {
       1234,
       Header.Flags.of({
         QR: 'query',
-        OPCODE: Header.Flags.Opcode.QUERY,
+        OPCODE: 'QUERY',
         AA: false,
         TC: false,
         RD: false,

@@ -6,7 +6,7 @@ describe('HeaderFlags', () => {
   it('should serialize 1', () => {
     const flags = Header.Flags.of({
       QR: 'query',
-      OPCODE: Header.Flags.Opcode.QUERY,
+      OPCODE: 'QUERY',
       AA: false,
       TC: false,
       RD: false,
@@ -22,7 +22,7 @@ describe('HeaderFlags', () => {
   it('should serialize 2', () => {
     const flags = Header.Flags.of({
       QR: 'response',
-      OPCODE: 0b1111,
+      OPCODE: 'QUERY',
       AA: true,
       TC: true,
       RD: true,
@@ -32,14 +32,14 @@ describe('HeaderFlags', () => {
       CD: true,
       RCODE: 15,
     });
-    expect(HexReadable.fromBuffer(flags.serialize())).toMatchInlineSnapshot(`"ff ff"`);
+    expect(HexReadable.fromBuffer(flags.serialize())).toMatchInlineSnapshot(`"87 ff"`);
   });
 
   it('should deserialize', () => {
-    const serialized = HexReadable.toBuffer('ff ff');
+    const serialized = HexReadable.toBuffer('87 ff');
     const flags = Header.Flags.deserialize(serialized);
     expect(flags.QR).toBe('response');
-    expect(flags.OPCODE).toBe(0b1111);
+    expect(flags.OPCODE).toBe(Header.Flags.Opcode.QUERY);
     expect(flags.AA).toBe(true);
     expect(flags.TC).toBe(true);
     expect(flags.RD).toBe(true);
