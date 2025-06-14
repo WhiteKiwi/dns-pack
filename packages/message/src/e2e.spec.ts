@@ -4,9 +4,7 @@ import { Name, nameParser } from './common/name';
 import { TypedBinaryParser } from './common/typed-binary-parser';
 import { UrlSafeBase64 } from './common/url-safe-base64';
 import { dnsMessageToReadable } from './common/utils/dns-message-to-readable';
-import { Header } from './message/header/header';
 import { DnsMessage } from './message/message';
-import { Question } from './message/question/question';
 import { ResourceRecord } from './message/resource-record/resource-record';
 
 describe.skipIf(process.env.CI)('e2e', () => {
@@ -82,9 +80,9 @@ describe.skipIf(process.env.CI)('e2e', () => {
 
 const queryA = DnsMessage.Query(
   Math.floor(Math.random() * 65535), // ID
-  Header.Flags.from({
+  {
     QR: 'query',
-    OPCODE: Header.Flags.Opcode.QUERY,
+    OPCODE: 'QUERY',
     AA: false,
     TC: false,
     RD: true,
@@ -93,14 +91,14 @@ const queryA = DnsMessage.Query(
     AD: false,
     CD: false,
     RCODE: 0,
-  }),
+  },
   {
     questions: [
-      Question.from({
-        name: Name.of('example.com.'),
-        type: ResourceRecord.Type.A,
-        class: ResourceRecord.Class.IN,
-      }),
+      {
+        name: 'example.com.',
+        type: 'A',
+        class: 'IN',
+      },
     ],
     additional: [
       ResourceRecord.OPT.of({
@@ -116,9 +114,9 @@ const queryA = DnsMessage.Query(
 
 const queryDNSKEY = DnsMessage.Query(
   Math.floor(Math.random() * 65535), // ID
-  Header.Flags.from({
+  {
     QR: 'query',
-    OPCODE: Header.Flags.Opcode.QUERY,
+    OPCODE: 'QUERY',
     AA: false,
     TC: false,
     RD: true,
@@ -127,14 +125,14 @@ const queryDNSKEY = DnsMessage.Query(
     AD: false,
     CD: false,
     RCODE: 0,
-  }),
+  },
   {
     questions: [
-      Question.from({
-        name: Name.of('example.com.'),
-        type: ResourceRecord.Type.DNSKEY,
-        class: ResourceRecord.Class.IN,
-      }),
+      {
+        name: 'example.com.',
+        type: 'DNSKEY',
+        class: 'IN',
+      },
     ],
     additional: [
       ResourceRecord.OPT.of({
