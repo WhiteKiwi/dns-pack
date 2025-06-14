@@ -3,6 +3,13 @@ import { Serializable } from '../../common/serializable';
 import { TypedBinaryParser } from '../../common/typed-binary-parser';
 import { ResourceRecord } from '../resource-record/resource-record';
 
+export namespace Question {
+  export type Readable = {
+    name: Name.Readable;
+    type: ResourceRecord.Type.Readable;
+    class: ResourceRecord.Class.Readable;
+  };
+}
 export class Question implements Serializable {
   public readonly class: ResourceRecord.Class;
   private constructor(
@@ -11,6 +18,14 @@ export class Question implements Serializable {
     _class: ResourceRecord.Class,
   ) {
     this.class = _class;
+  }
+
+  static of(readable: Question.Readable) {
+    return new Question(
+      Name.of(readable.name),
+      ResourceRecord.Type.of(readable.type),
+      ResourceRecord.Class.of(readable.class),
+    );
   }
 
   static from(parsed: questionParser.Parsed) {

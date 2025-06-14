@@ -3,7 +3,7 @@
 ```typescript
 const message = DnsMessage.Query(
   1234, // ID
-  Header.Flags.of({
+  {
     QR: 'query',
     OPCODE: 'QUERY',
     AA: false,
@@ -14,9 +14,9 @@ const message = DnsMessage.Query(
     AD: false,
     CD: false,
     RCODE: 0,
-  }),
+  },
   {
-    questions: [Question.of({ name: 'example.com.', type: 'A', class: 'IN' })],
+    questions: [{ name: 'example.com.', type: 'A', class: 'IN' }],
     additional: [
       ResourceRecord.OPT.of({
         version: 0,

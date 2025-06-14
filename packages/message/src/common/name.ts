@@ -4,6 +4,7 @@ export namespace Name {
   export namespace Label {
     export type Standard = _Label.Standard;
   }
+  export type Readable = string;
 }
 
 /**

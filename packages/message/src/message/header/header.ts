@@ -4,6 +4,19 @@ import { HeaderFlags, headerFlagsParser } from './header-flags';
 
 export namespace Header {
   export type Flags = HeaderFlags;
+  export namespace Flags {
+    export type Readable = HeaderFlags.Readable;
+  }
+  export type Readable = {
+    id: number;
+    flags: Header.Flags.Readable;
+    count: {
+      question: number;
+      answer: number;
+      authority: number;
+      additional: number;
+    };
+  };
 }
 
 export class Header implements Serializable {
@@ -17,6 +30,10 @@ export class Header implements Serializable {
       additional: number;
     },
   ) {}
+
+  static of(readable: Header.Readable) {
+    return new Header(readable.id, HeaderFlags.of(readable.flags), readable.count);
+  }
 
   static from(parsed: headerParser.Parsed) {
     return new Header(parsed.id, parsed.flags, parsed.count);

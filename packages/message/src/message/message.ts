@@ -26,17 +26,17 @@ export class DnsMessage implements Serializable {
 
   static Query(
     id: number,
-    flags: Header.Flags,
+    flags: Header.Flags.Readable,
     {
       questions,
       additional,
     }: {
-      questions: Question[];
+      questions: Question.Readable[];
       additional: ResourceRecord[];
     },
   ) {
     return new DnsMessage(
-      Header.from({
+      Header.of({
         id,
         flags,
         count: {
@@ -46,7 +46,7 @@ export class DnsMessage implements Serializable {
           additional: additional.length,
         },
       }),
-      questions,
+      questions.map(Question.of),
       [], // answers
       [], // authorities
       additional,

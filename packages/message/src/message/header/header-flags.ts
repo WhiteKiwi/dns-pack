@@ -8,12 +8,17 @@ export namespace HeaderFlags {
   export namespace Opcode {
     export type Readable = Enum.KeyOf<typeof Opcode>;
   }
+  export type Readable = Omit<headerFlagsParser.Parsed, 'OPCODE'> & { OPCODE: Opcode.Readable };
 }
 
 export class HeaderFlags {
   static Opcode = Opcode;
 
   private constructor(private readonly parsed: headerFlagsParser.Parsed) {}
+
+  static of(readable: HeaderFlags.Readable) {
+    return new HeaderFlags({ ...readable, OPCODE: Opcode[readable.OPCODE] });
+  }
 
   static from(parsed: headerFlagsParser.Parsed): HeaderFlags {
     return new HeaderFlags(parsed);

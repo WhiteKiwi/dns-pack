@@ -19,6 +19,12 @@ describe.skipIf(process.env.CI)('e2e', () => {
     console.log('response(A): ', dnsMessageToReadable(aResponse), '\n');
 
     console.log('============================== verify ==============================');
+    const rrsigData = findAndParseRRSIG(aResponse.answers);
+    console.log('RRSIG: ', rrsigData, '\n');
+    if (rrsigData.algorithm !== 13) {
+      throw new Error(`Unsupported algorithm: ${rrsigData.algorithm}`);
+    }
+
     const zskList = findAndParseZSKList(dnskeyResponse.answers);
     for (const zsk of zskList) {
       console.log(
@@ -32,10 +38,6 @@ describe.skipIf(process.env.CI)('e2e', () => {
         '\n',
       );
     }
-
-    const rrsigData = findAndParseRRSIG(aResponse.answers);
-    console.log('RRSIG: ', rrsigData, '\n');
-
     const zsk = zskList.find((zsk) => zsk.keyTag === rrsigData.keyTag);
     if (!zsk) {
       throw new Error('ZSK not found');
@@ -68,9 +70,6 @@ describe.skipIf(process.env.CI)('e2e', () => {
       '\n',
     );
     const canonicalized = Buffer.concat(canonicalizedRRSet.map((rr) => rr.serialize()));
-    if (rrsigData.algorithm !== 13) {
-      throw new Error(`Unsupported algorithm: ${rrsigData.algorithm}`);
-    }
     const result = verifyRRSIG_ECDSA(
       canonicalized,
       zsk.publicKey,
