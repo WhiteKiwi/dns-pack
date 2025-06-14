@@ -30,7 +30,7 @@ export class ResourceRecordA implements ResourceRecord<IPv4> {
     return new ResourceRecordA(Name.of(name), ResourceRecord.Class[_class], ttl, IPv4.of(ipv4));
   }
 
-  static from(parsed: ResourceRecord) {
+  static from(parsed: ResourceRecord.Like) {
     return new ResourceRecordA(
       parsed.name,
       parsed.class,

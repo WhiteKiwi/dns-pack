@@ -1,7 +1,7 @@
-import { Name } from '../../common/name';
+import { Name, nameParser } from '../../common/name';
 import { Serializable } from '../../common/serializable';
+import { TypedBinaryParser } from '../../common/typed-binary-parser';
 import { ResourceRecord } from '../resource-record/resource-record';
-import { QuestionParser } from './question.parser';
 
 export class Question implements Serializable {
   public readonly class: ResourceRecord.Class;
@@ -13,34 +13,23 @@ export class Question implements Serializable {
     this.class = _class;
   }
 
-  static of(question: {
-    name: string;
-    type: ResourceRecord.Type.Readable;
-    class: ResourceRecord.Class.Readable;
-  }) {
-    return new Question(
-      Name.of(question.name),
-      ResourceRecord.Type[question.type],
-      ResourceRecord.Class[question.class],
-    );
-  }
-
-  static parse(
-    buffer: Buffer,
-    offset: number,
-  ): {
-    question: Question;
-    offset: number;
-  } {
-    const { question, offset: next } = QuestionParser.parse(buffer, offset);
-
-    return {
-      question: new Question(question.name, question.type, question.class),
-      offset: next,
-    };
+  static from(parsed: questionParser.Parsed) {
+    return new Question(parsed.name, parsed.type, parsed.class);
   }
 
   serialize() {
     return Buffer.concat([this.name.serialize(), this.type.serialize(), this.class.serialize()]);
   }
 }
+
+namespace questionParser {
+  export type Parsed = {
+    name: Name;
+    type: ResourceRecord.Type;
+    class: ResourceRecord.Class;
+  };
+}
+export const questionParser = new TypedBinaryParser<questionParser.Parsed>()
+  .nest('name', { type: nameParser, formatter: Name.from })
+  .uint16('type', { formatter: ResourceRecord.Type.from })
+  .uint16('class', { formatter: ResourceRecord.Class.from });

@@ -1,4 +1,4 @@
-import { Label, Name } from './name';
+import { Name } from './name';
 
 /**
  * https://datatracker.ietf.org/doc/html/rfc4034#section-6.1
@@ -24,8 +24,8 @@ export function canonicalizeDnsNameOrder(a: Name, b: Name): number {
   return a.labels.length - b.labels.length;
 }
 
-const cache = new WeakMap<Label.Standard, Buffer>();
-function toLowerCasedBuffer(label: Label.Standard): Buffer {
+const cache = new WeakMap<Name.Label.Standard, Buffer>();
+function toLowerCasedBuffer(label: Name.Label.Standard): Buffer {
   if (cache.has(label)) {
     return cache.get(label)!;
   }

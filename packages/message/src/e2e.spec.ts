@@ -1,6 +1,7 @@
 import * as crypto from 'crypto';
-import { describe, it } from 'vitest';
-import { Name } from './common/name';
+import { describe, expect, it } from 'vitest';
+import { Name, nameParser } from './common/name';
+import { TypedBinaryParser } from './common/typed-binary-parser';
 import { UrlSafeBase64 } from './common/url-safe-base64';
 import { dnsMessageToReadable } from './common/utils/dns-message-to-readable';
 import { Header } from './message/header/header';
@@ -18,56 +19,73 @@ describe.skipIf(process.env.CI)('e2e', () => {
     console.log('response(A): ', dnsMessageToReadable(aResponse), '\n');
 
     console.log('============================== verify ==============================');
-    const zsk = findAndParseZSK(dnskeyResponse.answers);
-    console.log(
-      'ZSK: ',
-      {
-        flags: zsk.flags,
-        protocol: zsk.protocol,
-        algorithm: zsk.algorithm,
-        publicKey: zsk.publicKey.toString('base64'),
-      },
-      '\n',
-    );
+    const zskList = findAndParseZSKList(dnskeyResponse.answers);
+    for (const zsk of zskList) {
+      console.log(
+        'ZSK: ',
+        {
+          flags: zsk.flags,
+          protocol: zsk.protocol,
+          algorithm: zsk.algorithm,
+          publicKey: zsk.publicKey.toString('base64'),
+        },
+        '\n',
+      );
+    }
 
     const rrsigData = findAndParseRRSIG(aResponse.answers);
     console.log('RRSIG: ', rrsigData, '\n');
 
+    const zsk = zskList.find((zsk) => zsk.keyTag === rrsigData.keyTag);
+    if (!zsk) {
+      throw new Error('ZSK not found');
+    }
+
     const aRRSet = aResponse.answers
       .filter((answer) => answer.type.valueOf() === ResourceRecord.Type.A.valueOf())
-      .map((answer) => ResourceRecord.A.from(answer));
+      .map((answer) =>
+        ResourceRecord.A.from({
+          name: answer.name,
+          type: answer.type,
+          class: answer.class,
+          ttl: rrsigData.originalTTL,
+          data: answer.data,
+        }),
+      );
     const canonicalizedRRSet = aRRSet.sort((a, b) =>
       a.data.valueOf().localeCompare(b.data.valueOf()),
     );
     console.log(
-      'canonicalizedRRSet: \n',
-      canonicalizedRRSet
-        .map(
-          (rr) =>
-            `  ${rr.name.valueOf()}\t${
-              rr.ttl
-            }\t${rr.class.toJSON()}\t${rr.type.toJSON()}\t${rr.data.valueOf()}`,
-        )
-        .join('\n'),
+      'canonicalizedRRSet: \n' +
+        canonicalizedRRSet
+          .map(
+            (rr) =>
+              `  ${rr.name.valueOf()}\t${
+                rr.ttl
+              }\t${rr.class.toJSON()}\t${rr.type.toJSON()}\t${rr.data.valueOf()}`,
+          )
+          .join('\n'),
       '\n',
     );
     const canonicalized = Buffer.concat(canonicalizedRRSet.map((rr) => rr.serialize()));
-
+    if (rrsigData.algorithm !== 13) {
+      throw new Error(`Unsupported algorithm: ${rrsigData.algorithm}`);
+    }
     const result = verifyRRSIG_ECDSA(
       canonicalized,
       zsk.publicKey,
       rrsigData.prefix,
       rrsigData.signature,
     );
-    console.log('result:', result);
+    expect(result).toBe(true);
   });
 });
 
 const queryA = DnsMessage.Query(
   Math.floor(Math.random() * 65535), // ID
-  Header.Flags.of({
+  Header.Flags.from({
     QR: 'query',
-    OPCODE: 'QUERY',
+    OPCODE: Header.Flags.Opcode.QUERY,
     AA: false,
     TC: false,
     RD: true,
@@ -78,7 +96,13 @@ const queryA = DnsMessage.Query(
     RCODE: 0,
   }),
   {
-    questions: [Question.of({ name: 'example.com.', type: 'A', class: 'IN' })],
+    questions: [
+      Question.from({
+        name: Name.of('example.com.'),
+        type: ResourceRecord.Type.A,
+        class: ResourceRecord.Class.IN,
+      }),
+    ],
     additional: [
       ResourceRecord.OPT.of({
         version: 0,
@@ -93,9 +117,9 @@ const queryA = DnsMessage.Query(
 
 const queryDNSKEY = DnsMessage.Query(
   Math.floor(Math.random() * 65535), // ID
-  Header.Flags.of({
+  Header.Flags.from({
     QR: 'query',
-    OPCODE: 'QUERY',
+    OPCODE: Header.Flags.Opcode.QUERY,
     AA: false,
     TC: false,
     RD: true,
@@ -106,7 +130,13 @@ const queryDNSKEY = DnsMessage.Query(
     RCODE: 0,
   }),
   {
-    questions: [Question.of({ name: 'example.com.', type: 'DNSKEY', class: 'IN' })],
+    questions: [
+      Question.from({
+        name: Name.of('example.com.'),
+        type: ResourceRecord.Type.DNSKEY,
+        class: ResourceRecord.Class.IN,
+      }),
+    ],
     additional: [
       ResourceRecord.OPT.of({
         version: 0,
@@ -130,23 +160,61 @@ async function queryDnsOverHttps(host: string, query: DnsMessage): Promise<DnsMe
   return DnsMessage.parse(Buffer.from(data));
 }
 
-function findAndParseZSK(answers: ResourceRecord[]) {
-  const zsk = answers
+const dnskeyParser = new TypedBinaryParser<{
+  flags: number;
+  protocol: number;
+  algorithm: number;
+  publicKey: Buffer;
+}>()
+  .endianess('big')
+  .uint16('flags')
+  .uint8('protocol')
+  .uint8('algorithm')
+  .buffer('publicKey', { length: 'publicKeyLength', readUntil: 'eof' });
+
+function findAndParseZSKList(answers: ResourceRecord[]) {
+  const zskList = answers
     .filter((answer) => answer.type.valueOf() === ResourceRecord.Type.DNSKEY.valueOf())
     .map((answer) => {
       const serialized = answer.data.serialize();
-      const flags = serialized.readUInt16BE(0);
-      const protocol = serialized.readUInt8(2);
-      const algorithm = serialized.readUInt8(4);
-      const publicKey = serialized.subarray(4);
-      return { flags, protocol, algorithm, publicKey };
+      return dnskeyParser.parse(serialized);
     })
-    .find((answer) => answer.flags === 256);
-  if (!zsk) {
+    .filter((answer) => answer.flags === 256)
+    .map((zsk) => ({
+      ...zsk,
+      keyTag: dnskeyToKeyTag(zsk),
+    }));
+  if (!zskList.length) {
     throw new Error('ZSK not found');
   }
-  return zsk;
+  return zskList;
 }
+
+const rrsigParser = new TypedBinaryParser<{
+  typeCovered: number;
+  algorithm: number;
+  labels: number;
+  originalTTL: number;
+  expiration: number;
+  inception: number;
+  keyTag: number;
+  signerName: string;
+  signature: Buffer;
+  prefix: Buffer;
+}>()
+  .endianess('big')
+  .uint16('typeCovered')
+  .uint8('algorithm')
+  .uint8('labels')
+  .uint32('originalTTL')
+  .uint32('expiration')
+  .uint32('inception')
+  .uint16('keyTag')
+  .nest('signerName', {
+    type: nameParser,
+    formatter: Name.from,
+  })
+  .buffer('signature', { length: 'signatureLength', readUntil: 'eof' });
 
 function findAndParseRRSIG(answers: ResourceRecord[]) {
   const rrsigRR = answers.find(
@@ -156,20 +224,12 @@ function findAndParseRRSIG(answers: ResourceRecord[]) {
     throw new Error('RRSIG not found');
   }
   const serialized = rrsigRR.data.serialize();
-  const { name, offset } = Name.parse(serialized, 18);
-  const rrsig = {
-    typeCovered: serialized.readUInt16BE(0),
-    algorithm: serialized.readUInt8(2),
-    labels: serialized.readUInt8(3),
-    originalTTL: serialized.readUInt32BE(4),
-    expiration: serialized.readUInt32BE(8),
-    inception: serialized.readUInt32BE(12),
-    keyTag: serialized.readUInt16BE(16),
-    signerName: name.valueOf(),
-    signature: serialized.subarray(offset),
-    prefix: serialized.subarray(0, offset),
+  const rrsig = rrsigParser.parse(serialized);
+
+  return {
+    ...rrsig,
+    prefix: serialized.subarray(0, serialized.length - rrsig.signature.length),
   };
-  return rrsig;
 }
 
 function verifyRRSIG_ECDSA(
@@ -195,4 +255,32 @@ function verifyRRSIG_ECDSA(
 
   const verified = pubPoint.verify(digest, sigObj);
   return verified;
+}
+
+function dnskeyToKeyTag({
+  flags,
+  protocol,
+  algorithm,
+  publicKey,
+}: {
+  flags: number;
+  protocol: number;
+  algorithm: number;
+  publicKey: Buffer;
+}): number {
+  // 1. Build DNSKEY RDATA
+  // Flags (2 bytes, BE), Protocol (1 byte), Algorithm (1 byte), PublicKey (n bytes)
+  const rdata = Buffer.alloc(4 + publicKey.length);
+  rdata.writeUInt16BE(flags, 0);
+  rdata.writeUInt8(protocol, 2);
+  rdata.writeUInt8(algorithm, 3);
+  publicKey.copy(rdata, 4);
+
+  // 2. Key Tag Calculation (RFC 4034, Appendix B.1)
+  let ac = 0;
+  for (let i = 0; i < rdata.length; ++i) {
+    ac += i & 1 ? rdata[i] : rdata[i] << 8;
+  }
+  ac += (ac >> 16) & 0xffff; // add overflow
+  return ac & 0xffff;
 }

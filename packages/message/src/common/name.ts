@@ -1,22 +1,35 @@
-import { Byte } from './byte';
-import { Serializable } from './serializable';
+import { Label as _Label, labelsParser } from './label';
+
+export namespace Name {
+  export namespace Label {
+    export type Standard = _Label.Standard;
+  }
+}
 
 /**
  * https://datatracker.ietf.org/doc/html/rfc1035#section-3.1
  */
 export class Name {
-  private constructor(public readonly labels: Label.Standard[]) {}
+  private constructor(public readonly labels: _Label.Standard[]) {}
 
   static of(name: string) {
-    return new Name(name.split('.').map((label) => new Label.Standard(label)));
+    return new Name(name.split('.').map((label) => new _Label.Standard(label)));
   }
 
-  static parse(buffer: Buffer, offset: number): { name: Name; offset: number } {
-    const { name, offset: next } = this.parseName(buffer, offset);
-    return {
-      name: new Name(name.split('.').map((label) => new Label.Standard(label))),
-      offset: next,
-    };
+  static from(name: labelsParser.Parsed) {
+    const flatten: string[] = [];
+    for (const label of name.labels) {
+      if (label.type === 0b00) {
+        flatten.push(label.value);
+        continue;
+      }
+      if (label.type === 0b11) {
+        flatten.push(...label.value);
+        continue;
+      }
+      throw new Error(`Invalid label type: ${(label as any).type}`);
+    }
+    return new Name(flatten.map((label) => new _Label.Standard(label)));
   }
 
   serialize(): Buffer {
@@ -30,61 +43,7 @@ export class Name {
   valueOf(): string {
     return this.labels.map((label) => label.valueOf()).join('.');
   }
-
-  private static parseName(buffer: Buffer, offset: number): { name: string; offset: number } {
-    const labels: string[] = [];
-    while (true) {
-      const lengthOctet = new Byte(buffer.readUInt8(offset));
-      offset += 1;
-
-      if (lengthOctet.read(0, 8) === 0) {
-        return { name: labels.map((label) => `${label}.`).join(''), offset };
-      }
-
-      // standard label
-      if (lengthOctet.read(0, 2) === 0b00) {
-        const byteLength = lengthOctet.read(2, 6);
-        const label = buffer.subarray(offset, offset + byteLength);
-        labels.push(label.toString('ascii'));
-        offset += byteLength;
-      }
-      // pointer label
-      else if (lengthOctet.read(0, 2) === 0b11) {
-        const name = this.resolvePointerLabel(buffer, buffer.readUInt8(offset));
-        offset += 1;
-        return { name, offset };
-      }
-      // unexpected label
-      else {
-        throw new Error(`Invalid length octet: ${lengthOctet.read(0, 2)}`);
-      }
-    }
-  }
-
-  private static resolvePointerLabel(buffer: Buffer, offset: number): string {
-    const { name } = this.parseName(buffer, offset);
-    return name;
-  }
 }
 
-export namespace Label {
-  export class Standard implements Serializable {
-    constructor(private readonly label: string) {}
-
-    serialize(): Buffer {
-      const lengthOctet = this.getLengthOctet(this.label.length);
-      const labelBuffer = Buffer.from(this.label, 'ascii');
-      return Buffer.concat([lengthOctet, labelBuffer]);
-    }
-
-    valueOf(): string {
-      return this.label;
-    }
-
-    private getLengthOctet(length: number) {
-      const buffer = Buffer.alloc(1);
-      buffer.writeUInt8(0b00111111 & length);
-      return buffer;
-    }
-  }
-}
+export const nameParser = labelsParser;
+nameParser.compile();

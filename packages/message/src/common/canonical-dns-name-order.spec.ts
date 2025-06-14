@@ -16,12 +16,6 @@ z.example
  */
 
 describe('canonicalizeDnsNameOrder', () => {
-  it('test', () => {
-    const a = Name.of('\x01.');
-    const b = Name.of('\x80.');
-    console.log(canonicalizeDnsNameOrder(a, b));
-  });
-
   it('should canonicalize dns name order', () => {
     const cases: Name[] = [
       Name.of('example.'),

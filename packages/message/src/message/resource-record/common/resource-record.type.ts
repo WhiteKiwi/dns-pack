@@ -9,12 +9,17 @@ export const ResourceRecordTypeEnum = Enum('Type', {
 
 export namespace ResourceRecordType {
   export type Like = Pick<ResourceRecordType, 'serialize' | 'valueOf' | 'toJSON'>;
+  export type Readable = Enum.KeyOf<typeof ResourceRecordTypeEnum>;
 }
 
 export class ResourceRecordType {
   private constructor(private readonly type: number) {}
 
-  static of(type: number) {
+  static of(readable: ResourceRecordType.Readable) {
+    return new ResourceRecordType(ResourceRecordTypeEnum[readable]);
+  }
+
+  static from(type: number) {
     return new ResourceRecordType(type);
   }
 

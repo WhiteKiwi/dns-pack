@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { Name } from '../common/name';
 import { dnsMessageToReadable } from '../common/utils/dns-message-to-readable';
 import { HexReadable } from '../common/utils/hex-readable';
 import { Header } from './header/header';
@@ -10,9 +11,9 @@ describe('DnsMessage', () => {
   it('should serialize', () => {
     const message = DnsMessage.Query(
       1234, // ID
-      Header.Flags.of({
+      Header.Flags.from({
         QR: 'query',
-        OPCODE: 'QUERY',
+        OPCODE: Header.Flags.Opcode.QUERY.valueOf(),
         AA: false,
         TC: false,
         RD: false,
@@ -23,7 +24,13 @@ describe('DnsMessage', () => {
         RCODE: 0,
       }),
       {
-        questions: [Question.of({ name: 'example.com.', type: 'A', class: 'IN' })],
+        questions: [
+          Question.from({
+            name: Name.of('example.com.'),
+            type: ResourceRecord.Type.A,
+            class: ResourceRecord.Class.IN,
+          }),
+        ],
         additional: [
           ResourceRecord.OPT.of({
             version: 0,
@@ -140,7 +147,7 @@ describe('DnsMessage', () => {
       >> Additional
         > 1. Name: 
           - Type: OPT
-          - Class: Class(512)
+          - Class: UdpPayloadSize(512)
           - Ttl: 32768
           - Data: (no data)"
     `);

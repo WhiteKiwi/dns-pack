@@ -1,7 +1,9 @@
+import { map } from 'ramda';
 import { Serializable } from '../common/serializable';
-import { Header } from './header/header';
-import { Question } from './question/question';
-import { ResourceRecord } from './resource-record/resource-record';
+import { TypedBinaryParser } from '../common/typed-binary-parser';
+import { Header, headerParser } from './header/header';
+import { Question, questionParser } from './question/question';
+import { ResourceRecord, resourceRecordParser } from './resource-record/resource-record';
 
 export class DnsMessage implements Serializable {
   private constructor(
@@ -11,6 +13,16 @@ export class DnsMessage implements Serializable {
     public readonly authorities: ResourceRecord[],
     public readonly additional: ResourceRecord[],
   ) {}
+
+  static from(parsed: dnsMessageParser.Parsed) {
+    return new DnsMessage(
+      parsed.header,
+      parsed.questions,
+      parsed.answers,
+      parsed.authorities,
+      parsed.additional,
+    );
+  }
 
   static Query(
     id: number,
@@ -24,11 +36,15 @@ export class DnsMessage implements Serializable {
     },
   ) {
     return new DnsMessage(
-      new Header(id, flags, {
-        question: questions.length,
-        answer: 0,
-        authority: 0,
-        additional: additional.length,
+      Header.from({
+        id,
+        flags,
+        count: {
+          question: questions.length,
+          answer: 0,
+          authority: 0,
+          additional: additional.length,
+        },
       }),
       questions,
       [], // answers
@@ -48,36 +64,42 @@ export class DnsMessage implements Serializable {
   }
 
   static parse(buffer: Buffer): DnsMessage {
-    const header = Header.deserialize(buffer);
-    let offset = 12;
-    const questions: Question[] = [];
-    for (let i = 0; i < header.count.question; i++) {
-      const { question, offset: next } = Question.parse(buffer, offset);
-      questions.push(question);
-      offset = next;
-    }
-
-    const answers: ResourceRecord[] = [];
-    for (let i = 0; i < header.count.answer; i++) {
-      const { resourceRecord, offset: next } = ResourceRecord.Parser.parse(buffer, offset);
-      answers.push(resourceRecord);
-      offset = next;
-    }
-
-    const authorities: ResourceRecord[] = [];
-    for (let i = 0; i < header.count.authority; i++) {
-      const { resourceRecord, offset: next } = ResourceRecord.Parser.parse(buffer, offset);
-      authorities.push(resourceRecord);
-      offset = next;
-    }
-
-    const additional: ResourceRecord[] = [];
-    for (let i = 0; i < header.count.additional; i++) {
-      const { resourceRecord, offset: next } = ResourceRecord.Parser.parse(buffer, offset);
-      additional.push(resourceRecord);
-      offset = next;
-    }
-
-    return new DnsMessage(header, questions, answers, authorities, additional);
+    return dnsMessageParser.parse(buffer);
   }
 }
+
+namespace dnsMessageParser {
+  export type Parsed = {
+    header: Header;
+    questions: Question[];
+    answers: ResourceRecord[];
+    authorities: ResourceRecord[];
+    additional: ResourceRecord[];
+  };
+}
+const dnsMessageParser = new TypedBinaryParser<DnsMessage>().nest({
+  type: new TypedBinaryParser<dnsMessageParser.Parsed>()
+    .nest('header', { type: headerParser })
+    .array('questions', {
+      type: questionParser,
+      length: 'header.count.question',
+      formatter: map(Question.from),
+    })
+    .array('answers', {
+      type: resourceRecordParser,
+      length: 'header.count.answer',
+      formatter: map(ResourceRecord.from),
+    })
+    .array('authorities', {
+      type: resourceRecordParser,
+      length: 'header.count.authority',
+      formatter: map(ResourceRecord.from),
+    })
+    .array('additional', {
+      type: resourceRecordParser,
+      length: 'header.count.additional',
+      formatter: map(ResourceRecord.from),
+    }),
+  formatter: DnsMessage.from,
+});
+dnsMessageParser.compile();
